@@ -14,22 +14,21 @@
 #define PRODUCT 	0x6010
 
 
-#define CK  0x01 // ADBUS0, SPI data clock
-#define DO 	0x02 // ADBUS1, SPI data out
-#define DI  0x04 // ADBUS2, SPI data in
-#define CS  0x08 // ADBUS3, SPI chip select
-#define L0  0x10 // ADBUS4, general-ourpose i/o, GPIOL0
-#define L1  0x20 // ADBUS5, general-ourpose i/o, GPIOL1
-#define L2  0x40 // ADBUS6, general-ourpose i/o, GPIOL2
-#define L3  0x80 // ADBUS7, general-ourpose i/o, GPIOL3
+#define CK  0x01 // AD0 SPI clock
+#define DO 	0x02 // AD1 SPI data out
+#define DI  0x04 // AD2 SPI data in
+#define CS  0x08 // AD3 SPI chip select
+#define L0  0x10 // AD4 GPIOL0
+#define L1  0x20 // AD5 GPIOL1
+#define L2  0x40 // AD6 GPIOL2
+#define L3  0x80 // AD7 GPIOL3
 
 
 
-// value: 0x08  CS=high, DI=low, DO=low, SK=low
-// dir: 0x0B  CS=output, DI=input, DO=output, SK=output
+// idle : 0x08  CS=high, DI=low, DO=low, SK=low
+// outpins: 0x0B  CS=output, DI=input, DO=output, SK=output
 
-static uint8_t cs_bits = CS;
-static uint8_t pindir = CS | DO | CK;
+static uint8_t outpins = CS | DO | CK;
 
 struct ftdi_context* ftdi;
 
@@ -62,11 +61,16 @@ int main(void){
    	ftdi_usb_purge_buffers(ftdi);
    	usleep(50000); // sleep 50 ms for setup to complete
    
+    ///////////////////// read JEDEC ID register in W25Q16 spi flash ////////////////
+
 	spi_init();
-	uint8_t rwbuf[4] = {0x9F, 0, 0, 0}; // read JEDEC ID on W25Q16 spi flash
+	uint8_t rwbuf[4] = {0x9F, 0, 0, 0}; 
 	spi_rw_buffer(rwbuf, 4);
     printf("JEDEC ID : %02X%02X%02X\r\n", rwbuf[1],rwbuf[2],rwbuf[3]);
-    
+
+	/////////////////////////////////////////////////////////////////////////////////
+	
+	    
    	ftdi_usb_reset(ftdi);
    	ftdi_usb_close(ftdi);
    	return 0;
@@ -79,13 +83,14 @@ int spi_init(void) {
 	uint8_t buf[256] = {0};
 	// Setup MPSSE; Operation code followed by 0 or more arguments.
 	buf[inx++] = TCK_DIVISOR;     // opcode: set clk divisor
-	buf[inx++] = 0x05;            // argument: low bit. 60 MHz / (5+1) = 1 MHz
-	buf[inx++] = 0x00;            // argument: high bit.
+	// spi clock = 12/divisor = 1 MHz
+	buf[inx++] = 0x05;            // (divisor/2 - 1) low byte
+	buf[inx++] = 0x00;            // (divisor/2 - 1) high byte
 	buf[inx++] = DIS_ADAPTIVE;    // opcode: disable adaptive clocking
 	buf[inx++] = DIS_3_PHASE;     // opcode: disable 3-phase clocking
-	buf[inx++] = SET_BITS_LOW;    // opcode: set low bits (ADBUS[0-7])
-	buf[inx++] = cs_bits; // argument: inital pin states
-	buf[inx++] = pindir;    // argument: pin direction
+	buf[inx++] = SET_BITS_LOW;    // opcode: set low bits (AD[0-7])
+	buf[inx++] = CS; // argument: inital pin states
+	buf[inx++] = outpins;    // argument: pin direction
 	
 	// Write the setup to the chip.
 	if ( ftdi_write_data(ftdi, buf, inx) != inx ) {
@@ -99,10 +104,10 @@ int spi_rw_buffer(uint8_t* pBuffer, int numBytes) {
 	int inx = 0;
 	uint8_t buf[256] = {0};
 
-	// assert CS
+	// assert CS (active low)
 	buf[inx++] = SET_BITS_LOW;
-	buf[inx++] = ~0x08 & cs_bits;
-	buf[inx++] = pindir;
+	buf[inx++] = 0;
+	buf[inx++] = outpins;
 
 	// commands to write and read n bytes in SPI0 (polarity = phase = 0) mode
 	buf[inx++] = MPSSE_DO_WRITE | MPSSE_WRITE_NEG | MPSSE_DO_READ;
@@ -113,8 +118,8 @@ int spi_rw_buffer(uint8_t* pBuffer, int numBytes) {
 
 	// de-assert CS
 	buf[inx++] = SET_BITS_LOW;
-	buf[inx++] = cs_bits;
-	buf[inx++] = pindir;
+	buf[inx++] = CS;
+	buf[inx++] = outpins;
 	//printf("Writing: 0x");
 	//for ( int i = 0; i < inx; ++i ) {
 	//	printf("%02X",buf[i]);
