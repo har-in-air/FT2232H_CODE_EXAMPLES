@@ -2,11 +2,15 @@
 
 <img src="FT2232HL_module.png">
 
-Ubuntu 20.04 terminal applications using FT2232HL to communicate with spi and i2c peripherals.
-
-Install libftdi with `sudo apt-get install libftdi-dev`.
+Ubuntu 20.04 terminal applications using FT2232HL to communicate with SPI and I2C slave devices.
 
 Uses interface A (AD<n> bus) for SPI / I2C interface. Interface B is free to be used as serial UART.
+
+## Platform
+
+* Ubuntu 20.04 amdx64
+* Install libftdi with `sudo apt-get install libftdi-dev`
+
 
 ## SPI Master interface
 
@@ -33,6 +37,8 @@ Note : for I2C interface pins AD1 and AD2 need to be connected together for SDA 
 `
 AD0 : SCLK, AD1+AD2 : SDA
 `
+
+
 
 <img src="ft2232_mpsse_i2c_pins.png">
 
