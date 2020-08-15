@@ -2,9 +2,9 @@
 
 <img src="FT2232HL_module.png">
 
-Ubuntu 20.04 terminal applications using FT2232HL to communicate with SPI and I2C slave devices.
+Ubuntu 20.04 terminal applications using FT2232HL USB adapter to communicate with SPI and I2C slave devices.
 
-Uses interface A (AD<n> bus) for SPI / I2C interface. Interface B is free to be used as serial UART.
+Uses module interface A (AD bus) for SPI / I2C interface. Interface B is free to be used as a serial UART.
 
 ## Platform
 
