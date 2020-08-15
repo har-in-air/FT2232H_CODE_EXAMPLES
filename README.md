@@ -14,10 +14,7 @@ Example code `spiflash_read_id.c` reads the JEDEC ID information from an W25Q16 
 command 0x9F and then reading 3 consecutive bytes. SPI clock configured for 1MHz.
 
 `
-AD0 : CLK
-AD1 : MOSI
-AD2 : MISO
-AD3 : CSn
+AD0 : CLK, AD1 : MOSI, AD2 : MISO, AD3 : CSn
 `
 
 <img src="ft2232_spi_transaction_screenshot.png">
@@ -34,8 +31,7 @@ configured in I2C mode with slave address 0XEE (8bit address). I2C clock configu
 Note : for I2C interface pins AD1 and AD2 need to be connected together for SDA bi-directional function.
 
 `
-AD0 : SCLK
-AD1,AD2 : SDA
+AD0 : SCLK, AD1+AD2 : SDA
 `
 
 <img src="ft2232_mpsse_i2c_pins.png">
