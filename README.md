@@ -37,7 +37,7 @@ Note : for I2C interface pins AD1 and AD2 need to be connected together for SDA 
 `
 AD0 : SCLK, AD1+AD2 : SDA
 `
-
+Reference : FTDI Application note AN_411
 
 
 <img src="ft2232_mpsse_i2c_pins.png">
