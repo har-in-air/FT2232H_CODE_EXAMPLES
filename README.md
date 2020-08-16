@@ -11,15 +11,21 @@ Uses module interface A (AD bus) for SPI / I2C interface. Interface B is free to
 * Ubuntu 20.04 amdx64
 * Install libftdi with `sudo apt-get install libftdi-dev`
 
+## FT2232H interface pinout
+
+<img src="FT2232H_pinout.png" >
 
 ## SPI Master interface
 
-Example code `spiflash_read_id.c` reads the JEDEC ID information from an W25Q16 SPI serial flash by sending the 
+Example code `spiflash_read_id.c` reads the JEDEC ID `0xEF4015` from an W25Q16 SPI serial flash by sending the 
 command 0x9F and then reading 3 consecutive bytes. SPI clock configured for 1MHz.
 
-`
-AD0 : CLK, AD1 : MOSI, AD2 : MISO, AD3 : CSn
-`
+```
+AD0 : CLK
+AD1 : MOSI
+AD2 : MISO
+AD3 : CSn
+```
 
 <img src="ft2232_spi_transaction_screenshot.png">
 
@@ -27,16 +33,18 @@ AD0 : CLK, AD1 : MOSI, AD2 : MISO, AD3 : CSn
 ## I2C Master interface
 
 
-Example code `i2c_read_reg.c` reads the device ID register at address 0xD0 from a BMP280 pressure sensor
-configured in I2C mode with slave address 0XEE (8bit address). I2C clock configured for 400kHz.
+Example code `i2c_read_reg.c` reads the device ID data `0x58` at  register address 0xD0 from a BMP280 pressure sensor
+configured in I2C mode with 7-bit slave address 0x77. I2C clock configured for 400kHz.
 
 <img src="i2c_read_register_transaction_snapshot.png">
 
 Note : for I2C interface pins AD1 and AD2 need to be connected together for SDA bi-directional function.
 
-`
-AD0 : SCLK, AD1+AD2 : SDA
-`
+```
+AD0		: SCLK
+AD1+AD2	: SDA
+```
+
 Reference : FTDI Application note AN_411
 
 

@@ -41,14 +41,16 @@
 #include <ftdi.h>
 
 
-const uint8_t MSB_RISING_EDGE_CLOCK_BYTE_IN = MPSSE_DO_READ;
-const uint8_t MSB_FALLING_EDGE_CLOCK_BYTE_OUT = MPSSE_DO_WRITE | MPSSE_WRITE_NEG;
+const uint32_t SYS_CLOCK_FREQ_HZ = 12000000;
+const uint32_t I2C_CLOCK_FREQ_HZ = 400000;
+
+const uint8_t MSB_FALLING_EDGE_CLOCK_BYTE_OUT = 0x11;
+const uint8_t MSB_RISING_EDGE_CLOCK_BYTE_IN = 0x20;
 const uint8_t MSB_RISING_EDGE_CLOCK_BIT_IN = 0x22;
 
 
 uint8_t OBuf[256]; // write buffer for MPSSE commands and data written to slave device
 uint8_t IBuf[256];  // read buffer for data
-unsigned int clkDiv = 0x004A; // 0x4A = 74, SCL Frequency = 60/((1+74)*2) MHz = 400khz
 int nbWr = 0; // output buffer index
 int nbSent = 0; // number bytes sent
 int nbRd = 0; // number bytes read
@@ -57,12 +59,15 @@ int debug = 1;	// Debug mode
 
 struct ftdi_context* ftdi;
 
+
+
 int ftdi_config(void);
-void i2c_config(void);
+void i2c_config(const uint32_t clockFreqHz);
 void i2c_start(void);
 void i2c_stop(void);
 int i2c_wrByte(uint8_t wrByte);
 uint8_t i2c_rdByte(void);
+uint16_t freq2div(const uint32_t system_clock, const uint32_t freq);
 
 
 
@@ -72,7 +77,7 @@ int main(int argc, char *argv[]) {
 	
 	//////////////////// read device id register from BMP280 /////////////
 	
-	i2c_config();
+	i2c_config(I2C_CLOCK_FREQ_HZ);
 
 	i2c_start();
 	
@@ -128,13 +133,15 @@ int ftdi_config(void) {
 		printf("Port opened, resetting device...\r\n");
 	
 	ftStatus |= ftdi_usb_reset(ftdi); 			// Reset USB device
-	ftStatus |= ftdi_usb_purge_rx_buffer(ftdi);	// purge rx buffer
-	ftStatus |= ftdi_usb_purge_tx_buffer(ftdi);	// purge tx buffer
+	usleep(10000);
 	
 	// Set MPSSE mode
 	ftdi_set_bitmode(ftdi, 0xFF, BITMODE_RESET);
+	usleep(10000);
 	ftdi_set_bitmode(ftdi, 0xFF, BITMODE_MPSSE);
-	
+	usleep(10000);
+	ftStatus |= ftdi_usb_purge_rx_buffer(ftdi);	// purge rx buffer
+	ftStatus |= ftdi_usb_purge_tx_buffer(ftdi);	// purge tx buffer
 	
 	 // Below code will synchronize the MPSSE interface by sending bad command 0xAA
 	 // response should be echo command followed by bad command 0xAA.
@@ -174,13 +181,13 @@ int ftdi_config(void) {
    return 0;
    }
    
+uint16_t freq2div(const uint32_t system_clock, const uint32_t freq) {
+  return (((system_clock / freq) / 2) - 1);
+}   
    
-   
-void i2c_config(void) {
+void i2c_config(const uint32_t clockFreqHz) {
 	nbWr = 0;
-	OBuf[nbWr++] = DIS_DIV_5; // Disable clock divide by 5 =>  60Mhz master clock
 	OBuf[nbWr++] = DIS_ADAPTIVE;// Disable adaptive clocking
-	OBuf[nbWr++] = EN_3_PHASE;// Enable 3 phase data clock,allow data on both clock edges
 	nbSent = ftdi_write_data(ftdi, OBuf, nbWr);	
 	
 	nbWr = 0;
@@ -188,9 +195,11 @@ void i2c_config(void) {
 	OBuf[nbWr++] = 0x03 ; // Set SDA, SCL high
 	OBuf[nbWr++] = 0x03; // Set SCL, SDA as outputs
 	// set SCL clock frequency 
-	OBuf[nbWr++] = TCK_DIVISOR; // Command to set clock divisor
-	OBuf[nbWr++] = clkDiv & 0xFF; //Set clock divisor low byte
-	OBuf[nbWr++] = (clkDiv >> 8) & 0xFF;	// Set clock divisor high byte
+	// using default configuration : master clock = 60MHz clock divided by 5 = 12MHz
+	OBuf[nbWr++] = TCK_DIVISOR; 
+	uint16_t clkDiv = freq2div(SYS_CLOCK_FREQ_HZ, I2C_CLOCK_FREQ_HZ);
+	OBuf[nbWr++] = (uint8_t)(clkDiv & 0xFF); // low byte
+	OBuf[nbWr++] = (uint8_t)((clkDiv >> 8) & 0xFF);	// high byte
 	nbSent = ftdi_write_data(ftdi, OBuf, nbWr);
 	
 	nbWr = 0; 
@@ -354,97 +363,7 @@ uint8_t i2c_rdByte(void) {
 	}
 
 
-#if 0
-// Read I2C bytes.
-// Note that read address must be sent beforehand
- 
-void i2c_rdBytes(uint8_t * readBuffer, unsigned int readLength) {
-    unsigned int clock = 60 * 1000/(1+clkDiv)/2; // K Hz
-    const int loopCount = (int)(10 * ((float)200/clock));
-    unsigned int readCount = 0;
-    int i = 0;  // Used only for loop
-    if (!readBuffer || !readLength) {
-        return;
-    	}
-    
-    while(readCount != (readLength -1))    {
-        // Command of read one byte
-        OBuf[nbWr++] = SET_BITS_LOW; 
-        OBuf[nbWr++] = 0x02; //Set SCL low
-        OBuf[nbWr++] = 0x01; //Set SCL pin as output, SDA pin as input (high Z)
-        OBuf[nbWr++] = MSB_RISING_EDGE_CLOCK_BYTE_IN; //Command to clock data byte in on –ve Clock Edge MSB first
-        OBuf[nbWr++] = 0x00; // read one byte
-        OBuf[nbWr++] = 0x00;
-        
-        // Set ACK
-        for (i=0; i != loopCount; ++i) {
-            OBuf[nbWr++] = SET_BITS_LOW;
-            OBuf[nbWr++] = 0x00;  // SDA and SCL Low
-            OBuf[nbWr++] = 0x03;
-        	}
 
-        for (i=0; i != loopCount; ++i)  {
-            OBuf[nbWr++] = SET_BITS_LOW;
-            OBuf[nbWr++] = 0x01;  // SDA Low, SCL High
-            OBuf[nbWr++] = 0x03;
-        	}
-
-        for (i=0; i != loopCount; ++i)  {
-            OBuf[nbWr++] = SET_BITS_LOW;
-            OBuf[nbWr++] = 0x02;  // SDA High, SCL Low
-            OBuf[nbWr++] = 0x03;
-        	}
-        ftdi_write_data(ftdi, OBuf, nbWr);
-        nbWr = 0;
-        ++readCount;
-    	}
-    
-    // The last byte is read with NO ACK.
-    // Command of read one byte
-    OBuf[nbWr++] = SET_BITS_LOW; //Command to set directions of lower 8 pins and force value on bits set as output
-    OBuf[nbWr++] = 0x00; //Set SCL low
-    OBuf[nbWr++] = 0x01; //Set SCL pin as output
-    OBuf[nbWr++] = MSB_RISING_EDGE_CLOCK_BYTE_IN; //Command to clock data byte in on –ve Clock Edge MSB first
-    OBuf[nbWr++] = 0x00;
-    OBuf[nbWr++] = 0x00; //Data length of 0x0000 means 1 byte data to clock in
-    
-    // Set NO ACK
-    for (i=0; i != loopCount; ++i)    {
-        OBuf[nbWr++] = SET_BITS_LOW;
-        OBuf[nbWr++] = 0x02; // SDA High SCL Low
-        OBuf[nbWr++] = 0x03;
-    	}
-
-    for (i=0; i != loopCount; ++i) {
-        OBuf[nbWr++] = SET_BITS_LOW;
-        OBuf[nbWr++] = 0x03; // SDA High, SCL High
-        OBuf[nbWr++] = 0x03;
-    	}
-
-    for (i=0; i != loopCount; ++i)    {
-        OBuf[nbWr++] = SET_BITS_LOW;
-        OBuf[nbWr++] = 0x02; // SDA High, SCL Low
-        OBuf[nbWr++] = 0x03;
-    	}
-    ftdi_write_data(ftdi, OBuf, nbWr);
-    nbWr = 0;
-        
-    // Read bytes from device receive buffer, first byte is data read, second byte is ACK bit
-	nbRd = ftdi_read_data(ftdi, readBuffer, readLength);
-    
-    if(nbRd != readLength) {
-		printf("Error reading i2c\n");
-		return;
-		}
-    
-    if(debug) {
-        for(i=0; i != readLength; ++i) {
-            printf("Data read: %02X\n", readBuffer[i]);
-        	}
-    	}	
-    return;
-	}
-#endif
 
 
 
