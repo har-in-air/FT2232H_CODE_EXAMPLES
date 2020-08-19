@@ -11,6 +11,7 @@ Uses module interface A (AD bus) for SPI / I2C interface. Interface B is free to
 * Windows 10 amdx64
 * Install mingw from `http://www.mingw.org/wiki/Getting_Started`. You should have at least mingw-base-bin and the C/C++ compiler package installed.
 * Install the latest Windows x64  FTDI USB D2XX drivers from `https://www.ftdichip.com/Drivers/D2XX.htm`. In my case, v2.12.28.
+* I extracted the libMPSSE static library and header files (Windows versions) from the zip archive at `https://www.ftdichip.com/Support/SoftwareExamples/MPSSE/LibMPSSE-SPI.htm`
 
 ## FT2232H interface pinout
 
