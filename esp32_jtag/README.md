@@ -30,7 +30,7 @@ RXD        BD0 (TXD)
 
 <img src="esp32_ft2232hl_jtag.jpg">
 
-## Integration into Visual Studio Code with Platformio on Ubuntu 20.04		    
+## Add udev rules on Ubuntu 20.04		    
 
 * Download and install [99-platformio-udev.rules](https://docs.platformio.org/en/latest/plus/debug-tools/esp-prog.html)
 ```
@@ -40,7 +40,7 @@ sudo service udev restart
 
 Now you should only see one ttyUSB port (channel B serial port) when you plug in the FT2232HL adapter.
 
-### Platformio.ini modification
+## Platformio.ini modification
 
 Add esp-prog 'debug_tool' and 'upload_tool' entries
 
@@ -57,7 +57,7 @@ debug_tool = esp-prog
 upload_protocol = esp-prog
 ```
 
-### Upload 
+## Upload 
 
 * Click on the Platformio icon (bug-eyed alien)
 * In the Platformio sidebar go to Project Tasks -> Upload
@@ -68,7 +68,7 @@ pio home
 pio run --target upload
 ```
 
-### Debug
+## Debug
 
 * Click on the Platformio icon
 * In the Platformio sidebar go to Quick Access -> Debug -> Start Debugging
