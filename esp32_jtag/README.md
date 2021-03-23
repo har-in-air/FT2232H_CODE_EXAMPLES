@@ -1,22 +1,30 @@
-# FT2232HL adapter used as esp-prog JTAG adapter 
+# FT2232HL USB module used as esp-prog JTAG adapter 
 
-* Software Platform : Ubuntu 20.04, Visual Studio Code with Platformio extension
-* Hardware Platform : Any ESP32 dev board with GPIO12 .. GPIO15 free for JTAG interface
 
-## ESP32 Dev board to FT2232HL USB adapter connections
+* Channel A used as JTAG programmer/debugger
+* Channel B used as serial port
+* Any ESP32 dev board with GPIO12 .. GPIO15 pins free for JTAG interface, TXD/RXD pins optional
+ for serial communication
+* Visual Studio Code with Platformio extension on Ubuntu 20.04
+
+
+## ESP32  to FT2232HL USB module connections
 
 ```
-ESP32                FT2232HL USB adapter
+ESP32      FT2232HL USB module
                    
-GND                           GND  
-Vin                           VCC(5V)
-             JTAG (channel A)       Serial (channel B)
-GPIO13       AD0 (TCK) purple
-GPIO12       AD1 (TDI) yellow
-GPIO15       AD2 (TDO) orange
-GPIO14       AD3 (TMS) brown
-TXD                                 BD1 (RXD)
-RXD                                 BD0 (TXD)		        
+GND        GND  
+Vin        VCC(5V)
+
+           Chan A - JTAG
+GPIO13     AD0 (TCK) 
+GPIO12     AD1 (TDI) 
+GPIO15     AD2 (TDO) 
+GPIO14     AD3 (TMS) 
+
+           Chan B - Serial
+TXD        BD1 (RXD)
+RXD        BD0 (TXD)		        
 ```	
 
 <img src="esp32_ft2232hl_jtag.jpg">
