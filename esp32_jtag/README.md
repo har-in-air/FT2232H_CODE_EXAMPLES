@@ -1,14 +1,15 @@
 # FT2232HL USB module used as esp-prog JTAG adapter 
 
-
-* Channel A used as JTAG programmer/debugger
+* The official Espressif esp-prog JTAG programmer uses a FT2232Hx chip, we
+can use any FT2232HL adapter instead 
+* Channel A used as JTAG interface
 * Channel B used as serial port
-* Any ESP32 dev board with GPIO12 .. GPIO15 pins free for JTAG interface, TXD/RXD pins optional
- for serial communication
+* ESP32 must have pins GPIO12..GPIO15 free for JTAG interface
+* TXD/RXD pins optional for serial communication
 * Visual Studio Code with Platformio extension on Ubuntu 20.04
 
 
-## ESP32  to FT2232HL USB module connections
+## ESP32 to FT2232HL USB module connections
 
 ```
 ESP32      FT2232HL USB module
@@ -16,13 +17,13 @@ ESP32      FT2232HL USB module
 GND        GND  
 Vin        VCC(5V)
 
-           Chan A - JTAG
+           JTAG (channel A)
 GPIO13     AD0 (TCK) 
 GPIO12     AD1 (TDI) 
 GPIO15     AD2 (TDO) 
 GPIO14     AD3 (TMS) 
 
-           Chan B - Serial
+           Serial (channel B)
 TXD        BD1 (RXD)
 RXD        BD0 (TXD)		        
 ```	
@@ -37,11 +38,13 @@ sudo cp 99-platformio-udev.rules /etc/udev/rules.d/99-platformio-udev.rules
 sudo service udev restart
 ```
 
-Now you should only see one ttyUSB port when you plug in the FT2232HL adapter (for channel B serial port).
+Now you should only see one ttyUSB port (channel B serial port) when you plug in the FT2232HL adapter.
 
-### Add esp-prog debug and upload to platformio.ini in your project directory
+### Platformio.ini modification
 
-Example
+Add esp-prog 'debug_tool' and 'upload_tool' entries
+
+platformio.ini example
 
 ```
 [env:esp32_dev_module]
@@ -49,7 +52,6 @@ platform = espressif32
 board = esp32dev
 framework = arduino
 monitor_speed = 115200
-upload_port = /dev/ttyUSB*
 monitor_port = /dev/ttyUSB*
 debug_tool = esp-prog
 upload_protocol = esp-prog
