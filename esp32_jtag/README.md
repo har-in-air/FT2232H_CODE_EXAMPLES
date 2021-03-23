@@ -42,7 +42,7 @@ Now you should only see one ttyUSB port (channel B serial port) when you plug in
 
 ## Platformio.ini modification
 
-Add 'debug_tool' and 'upload_protocol' entries
+Add `debug_tool` and `upload_protocol` entries
 
 platformio.ini example
 
