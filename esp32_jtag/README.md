@@ -32,7 +32,7 @@ RXD        BD0 (TXD)
 
 ## Add udev rules on Ubuntu 20.04		    
 
-* Download and install [99-platformio-udev.rules](https://docs.platformio.org/en/latest/plus/debug-tools/esp-prog.html)
+Download and install [99-platformio-udev.rules](https://docs.platformio.org/en/latest/plus/debug-tools/esp-prog.html)
 ```
 sudo cp 99-platformio-udev.rules /etc/udev/rules.d/99-platformio-udev.rules
 sudo service udev restart
