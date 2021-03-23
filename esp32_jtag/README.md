@@ -63,7 +63,7 @@ pio run --target upload
 * Click on the Platformio icon
 * In the Platformio sidebar go to Quick Access -> Debug -> Start Debugging
 
-<img src="esp32_ft2232hl_debug.jpg">
+<img src="esp32_ft2232hl_debug.png">
 
 
 
