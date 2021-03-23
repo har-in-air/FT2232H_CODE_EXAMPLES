@@ -6,7 +6,7 @@
 ## ESP32 Dev board to FT2232HL USB adapter connections
 
 ```
-ESP32        FT2232HL USB adapter
+ESP32                FT2232HL USB adapter
                    
 GND                           GND  
 Vin                           VCC(5V)
